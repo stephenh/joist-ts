@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/node:14.8.0
+      - image: cimg/node:lts
     steps:
       - checkout
       - setup_remote_docker
