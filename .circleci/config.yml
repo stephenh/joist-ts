@@ -1,11 +1,10 @@
 version: 2
 jobs:
   build:
-    docker:
-      - image: cimg/node:lts
+    machine:
+      image: ubuntu-2004:202104-01
     steps:
       - checkout
-      - setup_remote_docker
       - run: |
           cd packages/integration-tests
           docker-compose build db tests
