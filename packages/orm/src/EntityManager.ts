@@ -708,8 +708,11 @@ export class EntityManager<C = {}> {
     try {
       while (pendingEntities.length > 0) {
         await new Promise<void>((resolve, reject) => {
+          console.log(`Starting new AsyncLocalStorage.run with flushSecret=${this.flushSecret}`);
           currentFlushSecret.run({ flushSecret: this.flushSecret }, async () => {
             try {
+              const { flushSecret: b } = currentFlushSecret.getStore() || {};
+              console.log(`Inside AsyncLocalStorage.run, flushSecret=${b}`);
               const todos = createTodos(pendingEntities);
 
               // add objects to todos that have reactive hooks
@@ -723,6 +726,9 @@ export class EntityManager<C = {}> {
               await beforeFlush(this.ctx, todos);
               await beforeCreate(this.ctx, todos);
               await beforeUpdate(this.ctx, todos);
+
+              const { flushSecret: a } = currentFlushSecret.getStore() || {};
+              console.log(`Inside AsyncLocalStorage.run, flushSecret=${a}`);
               recalcDerivedFields(todos);
               await recalcAsyncDerivedFields(this, todos);
               await validate(todos);
@@ -1117,18 +1123,15 @@ async function afterCommit(ctx: unknown, todos: Record<string, Todo>): Promise<v
   await runHook(ctx, "afterCommit", todos, ["inserts", "updates"]);
 }
 
-function coerceError(
-  entity: Entity,
-  maybeError: ValidationRuleResult<any>,
-): ValidationError[] {
+function coerceError(entity: Entity, maybeError: ValidationRuleResult<any>): ValidationError[] {
   if (maybeError === undefined) {
     return [];
   } else if (typeof maybeError === "string") {
     return [{ entity, message: maybeError }];
   } else if (Array.isArray(maybeError)) {
-    return (maybeError as GenericError[]).map(ve => ({ entity, ...ve}));
+    return (maybeError as GenericError[]).map((ve) => ({ entity, ...ve }));
   } else {
-    return [{ entity, ...maybeError}];
+    return [{ entity, ...maybeError }];
   }
 }
 
