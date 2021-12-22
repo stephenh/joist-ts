@@ -1,4 +1,4 @@
-import { Entity, IdOf } from "../EntityManager";
+import { Entity, IdOf, Loadable } from "../EntityManager";
 import { CustomReference } from "./CustomReference";
 import { ManyToOneReferenceImpl } from "./ManyToOneReference";
 import { OneToOneReferenceImpl } from "./OneToOneReference";
@@ -16,7 +16,9 @@ export const ReferenceN = Symbol();
  * `U | undefined`. If it is not optional, `N` will be `never`, making the return types
  * `U | never` which becomes just `U`.
  */
-export interface Reference<T extends Entity, U extends Entity, N extends never | undefined> extends Relation<T, U> {
+export interface Reference<T extends Entity, U extends Entity, N extends never | undefined>
+  extends Relation<T, U>,
+    Loadable<LoadedReference<T, U, N>, U> {
   readonly isLoaded: boolean;
 
   load(opts?: { withDeleted: boolean }): Promise<U | N>;

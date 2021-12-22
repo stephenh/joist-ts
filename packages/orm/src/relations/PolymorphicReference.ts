@@ -4,6 +4,8 @@ import {
   getMetadata,
   IdOf,
   isEntity,
+  LoadableL,
+  LoadableN,
   PolymorphicFieldComponent,
 } from "../EntityManager";
 import {
@@ -250,7 +252,9 @@ export class PolymorphicReference<T extends Entity, U extends Entity, N extends 
     return this.id !== undefined ? getEm(this.entity)["findExistingInstance"](this.id) : undefined;
   }
 
-  [RelationT]: T = null!;
-  [RelationU]: U = null!;
-  [ReferenceN]: N = null!;
+  [RelationT] = null!;
+  [RelationU] = null!;
+  [ReferenceN] = null!;
+  [LoadableL] = null!;
+  [LoadableN] = null!;
 }

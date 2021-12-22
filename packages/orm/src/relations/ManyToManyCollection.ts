@@ -7,6 +7,8 @@ import {
   getEm,
   getMetadata,
   IdOf,
+  LoadableL,
+  LoadableN,
 } from "../";
 import { manyToManyDataLoader } from "../dataloaders/manyToManyDataLoader";
 import { getOrSet, remove } from "../utils";
@@ -259,8 +261,10 @@ export class ManyToManyCollection<T extends Entity, U extends Entity>
     return `OneToManyCollection(entity: ${this.entity}, fieldName: ${this.fieldName}, otherType: ${this.otherMeta.type}, otherFieldName: ${this.otherFieldName})`;
   }
 
-  [RelationT]: T = null!;
-  [RelationU]: U = null!;
+  [RelationT] = null!;
+  [RelationU] = null!;
+  [LoadableL] = null!;
+  [LoadableN] = null!;
 }
 
 export type JoinRow = {

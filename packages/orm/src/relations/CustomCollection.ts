@@ -1,4 +1,4 @@
-import { Entity, IdOf } from "../EntityManager";
+import { Entity, IdOf, LoadableL, LoadableN } from "../EntityManager";
 import { Collection, ensureNotDeleted, fail } from "../index";
 import { AbstractRelationImpl } from "./AbstractRelationImpl";
 import { RelationT, RelationU } from "./Relation";
@@ -146,8 +146,10 @@ export class CustomCollection<T extends Entity, U extends Entity>
     return entities.filter((entity) => opts?.withDeleted === true || !entity.isDeletedEntity);
   }
 
-  [RelationT]: T = null!;
-  [RelationU]: U = null!;
+  [RelationT] = null!;
+  [RelationU] = null!;
+  [LoadableL] = null!;
+  [LoadableN] = null!;
 }
 
 function ensureNewOrLoaded(reference: CustomCollection<any, any>) {

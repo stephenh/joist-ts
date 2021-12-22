@@ -1,11 +1,13 @@
-import { Entity, IdOf } from "../EntityManager";
+import { Entity, IdOf, Loadable } from "../EntityManager";
 import { CustomCollection } from "./CustomCollection";
 import { ManyToManyCollection } from "./ManyToManyCollection";
 import { OneToManyCollection } from "./OneToManyCollection";
 import { Relation } from "./Relation";
 
 /** A collection of `U` within `T`, either one-to-many or many-to-many. */
-export interface Collection<T extends Entity, U extends Entity> extends Relation<T, U> {
+export interface Collection<T extends Entity, U extends Entity>
+  extends Relation<T, U>,
+    Loadable<LoadedCollection<T, U>, U> {
   load(opts?: { withDeleted: boolean }): Promise<ReadonlyArray<U>>;
 
   find(id: IdOf<U>): Promise<U | undefined>;

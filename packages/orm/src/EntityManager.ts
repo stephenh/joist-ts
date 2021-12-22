@@ -180,20 +180,30 @@ type LoadedIfInKeyHint<T extends Entity, K extends keyof T, H> = K extends H ? M
 /** From any `Relations` field in `T`, i.e. for loader hints. */
 export type RelationsIn<T extends Entity> = SubType<T, Relation<any, any>>;
 
-export type Loadable<T extends Entity> = SubType<T, AsyncProperty<any, any> | Relation<any, any>>;
+export const LoadableL = Symbol();
+export const LoadableN = Symbol();
+
+/**
+ *  A marker interface for any relation/property/collection that can be loaded.
+ *
+ * `L` is the type to morph the property to, when it's marked as loaded.
+ * `N` is the next level of load hints, if this property supports it.
+ */
+export type Loadable<L, N> = {
+  [LoadableL]: L;
+  [LoadableN]: N;
+};
+
+export type LoadableOf<T> = SubType<T, Loadable<any, any>>;
 
 // https://medium.com/dailyjs/typescript-create-a-condition-based-subset-types-9d902cea5b8c
 type SubType<T, C> = Pick<T, { [K in keyof T]: T[K] extends C ? K : never }[keyof T]>;
 
 // We accept load hints as a string, or a string[], or a hash of { key: nested };
-export type LoadHint<T extends Entity> = keyof Loadable<T> | ReadonlyArray<keyof Loadable<T>> | NestedLoadHint<T>;
+export type LoadHint<T> = keyof LoadableOf<T> | ReadonlyArray<keyof LoadableOf<T>> | NestedLoadHint<T>;
 
-export type NestedLoadHint<T extends Entity> = {
-  [K in keyof Loadable<T>]?: T[K] extends Relation<any, infer U>
-    ? LoadHint<U>
-    : T[K] extends AsyncProperty<any, any>
-    ? {}
-    : never;
+export type NestedLoadHint<T> = {
+  [K in keyof LoadableOf<T>]?: T[K] extends Loadable<any, infer N> ? LoadHint<N> : {};
 };
 
 type MaybePromise<T> = T | PromiseLike<T>;

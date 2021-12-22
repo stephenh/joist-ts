@@ -8,6 +8,8 @@ import {
   getEm,
   getMetadata,
   IdOf,
+  LoadableL,
+  LoadableN,
   maybeResolveReferenceToId,
 } from "../index";
 import { remove } from "../utils";
@@ -227,6 +229,8 @@ export class OneToManyCollection<T extends Entity, U extends Entity>
     return (other as U)[this.otherFieldName] as any;
   }
 
-  [RelationT]: T = null!;
-  [RelationU]: U = null!;
+  [RelationT] = null!;
+  [RelationU] = null!;
+  [LoadableL] = null!;
+  [LoadableN] = null!;
 }

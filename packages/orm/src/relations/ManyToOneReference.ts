@@ -1,4 +1,12 @@
-import { currentlyInstantiatingEntity, Entity, EntityMetadata, IdOf, isEntity } from "../EntityManager";
+import {
+  currentlyInstantiatingEntity,
+  Entity,
+  EntityMetadata,
+  IdOf,
+  isEntity,
+  LoadableL,
+  LoadableN,
+} from "../EntityManager";
 import {
   deTagIds,
   ensureNotDeleted,
@@ -273,7 +281,9 @@ export class ManyToOneReferenceImpl<T extends Entity, U extends Entity, N extend
     return this.loaded ?? (this.id !== undefined ? getEm(this.entity)["findExistingInstance"](this.id) : undefined);
   }
 
-  [RelationT]: T = null!;
-  [RelationU]: U = null!;
-  [ReferenceN]: N = null!;
+  [RelationT] = null!;
+  [RelationU] = null!;
+  [ReferenceN] = null!;
+  [LoadableL] = null!;
+  [LoadableN] = null!;
 }

@@ -1,4 +1,4 @@
-import { Entity, IdOf } from "../EntityManager";
+import { Entity, IdOf, LoadableL, LoadableN } from "../EntityManager";
 import { ensureNotDeleted, fail, Reference, unsafeDeTagIds } from "../index";
 import { AbstractRelationImpl } from "./AbstractRelationImpl";
 import { ReferenceN } from "./Reference";
@@ -132,9 +132,11 @@ export class CustomReference<T extends Entity, U extends Entity, N extends never
     return opts?.withDeleted === true || entity === undefined || !entity.isDeletedEntity ? entity : (undefined as N);
   }
 
-  [RelationT]: T = null!;
-  [RelationU]: U = null!;
-  [ReferenceN]: N = null!;
+  [RelationT] = null!;
+  [RelationU] = null!;
+  [ReferenceN] = null!;
+  [LoadableL] = null!;
+  [LoadableN] = null!;
 }
 
 function ensureNewOrLoaded(reference: CustomReference<any, any, any>) {

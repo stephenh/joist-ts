@@ -1,4 +1,14 @@
-import { currentlyInstantiatingEntity, deTagIds, ensureNotDeleted, fail, getEm, IdOf, setField } from "../";
+import {
+  currentlyInstantiatingEntity,
+  deTagIds,
+  ensureNotDeleted,
+  fail,
+  getEm,
+  IdOf,
+  LoadableL,
+  LoadableN,
+  setField,
+} from "../";
 import { oneToOneDataLoader } from "../dataloaders/oneToOneDataLoader";
 import { Entity, EntityMetadata, getMetadata } from "../EntityManager";
 import { AbstractRelationImpl } from "./AbstractRelationImpl";
@@ -204,7 +214,9 @@ export class OneToOneReferenceImpl<T extends Entity, U extends Entity>
     return (other as U)[this.otherFieldName] as any;
   }
 
-  [RelationT]: T = null!;
-  [RelationU]: U = null!;
-  [ReferenceN]: undefined = null!;
+  [RelationT] = null!;
+  [RelationU] = null!;
+  [ReferenceN] = null!;
+  [LoadableL] = null!;
+  [LoadableN] = null!;
 }

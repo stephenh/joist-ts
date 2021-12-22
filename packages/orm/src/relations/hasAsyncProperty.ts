@@ -1,9 +1,9 @@
-import { Entity, Loaded, LoadHint } from "../EntityManager";
+import { Entity, Loadable, LoadableL, LoadableN, Loaded, LoadHint } from "../EntityManager";
 import { getEm } from "../index";
 
 const I = Symbol();
 
-export interface AsyncProperty<T extends Entity, V> {
+export interface AsyncProperty<T extends Entity, V> extends Loadable<LoadedProperty<T, V>, {}> {
   isLoaded: boolean;
   load(): Promise<V>;
   [I]?: T;
@@ -55,6 +55,9 @@ export class AsyncPropertyImpl<T extends Entity, H extends LoadHint<T>, V> imple
   get isLoaded() {
     return this.loaded;
   }
+
+  [LoadableL] = null!;
+  [LoadableN] = null!;
 }
 
 /** Type guard utility for determining if an entity field is an AsyncProperty. */
