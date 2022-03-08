@@ -1,6 +1,7 @@
 import { AsyncLocalStorage } from "async_hooks";
 import DataLoader from "dataloader";
 import { Knex } from "knex";
+import { Exact } from "src/Exact";
 import { createOrUpdatePartial } from "./createOrUpdatePartial";
 import { findDataLoader } from "./dataloaders/findDataLoader";
 import { loadDataLoader } from "./dataloaders/loadDataLoader";
@@ -302,7 +303,7 @@ export class EntityManager<C = {}> {
     } else if (entities.length === 1) {
       entity = entities[0];
     } else {
-      entity = this.create(type, { ...where, ...ifNew } as OptsOf<T>);
+      entity = this.create(type, { ...where, ...ifNew } as Exact<OptsOf<T>, any>);
     }
     if (upsert) {
       entity.set(upsert);
@@ -314,13 +315,16 @@ export class EntityManager<C = {}> {
   }
 
   /** Creates a new `type` and marks it as loaded, i.e. we know its collections are all safe to access in memory. */
-  public create<T extends Entity, O extends OptsOf<T>>(type: EntityConstructor<T>, opts: O): New<T, O> {
+  public create<T extends Entity, O extends Exact<OptsOf<T>, O>>(type: EntityConstructor<T>, opts: O): New<T, O> {
     // The constructor will run setOpts which handles defaulting collections to the right state.
     return new type(this, opts) as New<T, O>;
   }
 
   /** Creates a new `type` but with `opts` that are nullable, to accept partial-update-style input. */
-  public createPartial<T extends Entity>(type: EntityConstructor<T>, opts: PartialOrNull<OptsOf<T>>): T {
+  public createPartial<T extends Entity, O extends PartialOrNull<OptsOf<T>>>(
+    type: EntityConstructor<T>,
+    opts: Exact<PartialOrNull<OptsOf<T>>, O>,
+  ): T {
     // We force some manual calls to setOpts to mimic `setUnsafe`'s behavior that `undefined` should
     // mean "ignore" (and we assume validation rules will catch it later) but still set
     // `calledFromConstructor` because this is _basically_ like calling `new`.
@@ -331,7 +335,10 @@ export class EntityManager<C = {}> {
   }
 
   /** Creates a new `type` but with `opts` that are nullable, to accept partial-update-style input. */
-  public createOrUpdatePartial<T extends Entity>(type: EntityConstructor<T>, opts: DeepPartialOrNull<T>): Promise<T> {
+  public createOrUpdatePartial<T extends Entity, O extends Exact<DeepPartialOrNull<T>, O>>(
+    type: EntityConstructor<T>,
+    opts: O,
+  ): Promise<T> {
     return createOrUpdatePartial(this, type, opts);
   }
 
@@ -356,7 +363,7 @@ export class EntityManager<C = {}> {
   public async clone<T extends Entity, H extends LoadHint<T>>(entity: T, hint?: H): Promise<Loaded<T, H>> {
     const meta = getMetadata(entity);
     const { id, ...data } = entity.__orm.data;
-    const clone = this.create(meta.cstr, {} as OptsOf<T>);
+    const clone = this.create(meta.cstr, {} as any);
     clone.__orm.data = data;
     if (hint) {
       if ((typeof hint as any) === "string") {
