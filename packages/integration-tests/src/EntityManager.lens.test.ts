@@ -128,4 +128,15 @@ describe("EntityManager.lens", () => {
     const p1Id = await b1.load((b) => b.author.publisher.idOrFail);
     expect(p1Id).toEqual("p:1");
   });
+
+  it("can navigate multiple lenses", async () => {
+    await insertPublisher({ name: "p1" });
+    await insertAuthor({ first_name: "a1", publisher_id: 1 });
+    await insertBook({ title: "b1", author_id: 1 });
+    const em = newEntityManager();
+    const b1 = await em.load(Book, "1");
+    const [a, p] = await b1.loadAll((b) => [b.author, b.author.publisher] as const);
+    expect(a.firstName).toEqual("a1");
+    expect(p!.name).toEqual("p1");
+  });
 });

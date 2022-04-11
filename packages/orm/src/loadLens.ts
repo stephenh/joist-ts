@@ -37,6 +37,11 @@ export type Lens<T, R = T> = {
     : Lens<MaybeDropArray<DropUndefined<T[P]>>, MaybeArray<R, T[P]>>;
 };
 
+/** Given an array of Lenses, returns the array of returned values. */
+export type LensesValue<T> = {
+  [K in keyof T]: T[K] extends Lens<infer U, infer V> ? V : never;
+};
+
 /**
  * Allows declaratively loading/traversing several layers of references at once.
  *
@@ -49,19 +54,30 @@ export type Lens<T, R = T> = {
 // For some reason accepting Lens<this, this> does not work when called from within the entity
 // subclass itself, so we use the codegen hammer in our subclass to force the right Lens type
 // in a .load stub that just calls us for the implementation.
+export async function loadLens<T, U, V>(start: T, fn: (lens: Lens<T>) => Lens<U, V>): Promise<V>;
+export async function loadLens<T, U, AV extends Array<Lens<U, any>>>(
+  start: T,
+  fn: (lens: Lens<T>) => AV,
+): Promise<LensesValue<AV>>;
 export async function loadLens<T, U, V>(start: T, fn: (lens: Lens<T>) => Lens<U, V>): Promise<V> {
-  const paths = collectPaths(fn);
-  let current: any = start;
-  // Now evaluate each step of the path
-  for await (const path of paths) {
-    if (Array.isArray(current)) {
-      current = (await Promise.all(current.map((c) => maybeLoad(c, path)))).flat();
-      current = [...new Set(current.filter((c: any) => c !== undefined))];
-    } else {
-      current = await maybeLoad(current, path);
-    }
-  }
-  return current!;
+  const navigations = collectPaths(fn);
+  const navArray = navigations instanceof Array ? navigations : [navigations];
+  const values = await Promise.all(
+    navArray.map(async (nav) => {
+      let current: any = start;
+      // Now evaluate each step of the navigation path
+      for await (const path of nav.__paths) {
+        if (Array.isArray(current)) {
+          current = (await Promise.all(current.map((c) => maybeLoad(c, path)))).flat();
+          current = [...new Set(current.filter((c: any) => c !== undefined))];
+        } else {
+          current = await maybeLoad(current, path);
+        }
+      }
+      return current!;
+    }),
+  );
+  return navigations instanceof Array ? values : values[0];
 }
 
 function maybeLoad(object: any, path: string): unknown {
@@ -84,18 +100,22 @@ function maybeLoad(object: any, path: string): unknown {
  * This assumes you've first evaluated the lens with `loadLens` and now can access it synchronously.
  */
 export function getLens<T, U, V>(start: T, fn: (lens: Lens<T>) => Lens<U, V>): V {
-  const paths = collectPaths(fn);
-  let current: any = start;
-  // Now evaluate each step of the path
-  for (const path of paths) {
-    if (Array.isArray(current)) {
-      current = current.map((c) => maybeGet(c, path)).flat();
-      current = [...new Set(current)];
-    } else {
-      current = maybeGet(current, path);
+  const navigations = collectPaths(fn);
+  const navArray = navigations instanceof Array ? navigations : [navigations];
+  const values = navArray.map((nav) => {
+    let current: any = start;
+    // Now evaluate each step of the path
+    for (const path of nav.__paths) {
+      if (Array.isArray(current)) {
+        current = current.map((c) => maybeGet(c, path)).flat();
+        current = [...new Set(current)];
+      } else {
+        current = maybeGet(current, path);
+      }
     }
-  }
-  return current!;
+    return current!;
+  });
+  return navigations instanceof Array ? values : values[0];
 }
 
 function maybeGet(object: any, path: string): unknown {
@@ -116,19 +136,35 @@ function maybeGet(object: any, path: string): unknown {
   }
 }
 
-function collectPaths(fn: Function): string[] {
-  const paths: string[] = [];
-  // The proxy collects the path navigations that the user's `fn` lambda invokes.
-  const proxy = new Proxy(
-    {},
-    {
-      get(object, property, receiver) {
-        paths.push(String(property));
-        return receiver;
-      },
-    },
-  );
+type Navigation = { __paths: string[] };
+
+// Returns an array of navigations to support `a => [a.books, a.publisher]`. */
+function collectPaths(fn: Function): Navigation | Navigation[] {
   // Invoke the lens function to record the navigation path on our proxy
-  fn(proxy as any);
-  return paths;
+  return fn(
+    new Proxy(
+      { paths: [] as string[] },
+      {
+        get(object, property, proxy) {
+          if (property === "__paths") return object.paths;
+          // If this is the 1st path, return a new proxy to keep multiple paths within a single lens invocation separate
+          if (object.paths.length === 0) {
+            return new Proxy(
+              { paths: [String(property)] },
+              {
+                get(object, property, proxy) {
+                  if (property === "__paths") return object.paths;
+                  object.paths.push(String(property));
+                  return proxy;
+                },
+              },
+            );
+          } else {
+            object.paths.push(String(property));
+            return proxy;
+          }
+        },
+      },
+    ),
+  );
 }

@@ -15,6 +15,7 @@ import {
   hasOneToOne,
   isLoaded,
   Lens,
+  LensesValue,
   Loaded,
   LoadHint,
   loadLens,
@@ -188,6 +189,10 @@ export abstract class BookCodegen extends BaseEntity<EntityManager> {
   }
 
   load<U, V>(fn: (lens: Lens<Book>) => Lens<U, V>): Promise<V> {
+    return loadLens(this as any as Book, fn);
+  }
+
+  loadAll<AV extends ReadonlyArray<Lens<any, any>>>(fn: (lens: Lens<Book>) => AV): Promise<LensesValue<AV>> {
     return loadLens(this as any as Book, fn);
   }
 
