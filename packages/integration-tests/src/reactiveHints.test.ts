@@ -69,7 +69,7 @@ describe("reactiveHints", () => {
     ]);
   });
 
-  it("can do child o2m with w/o any ", () => {
+  it("can do child o2m with w/o any fields", () => {
     expect(reverseReactiveHint(Author, "books")).toEqual([
       { entity: Author, fields: [], path: [] },
       { entity: Book, fields: ["author"], path: ["author"] },
@@ -90,6 +90,69 @@ describe("reactiveHints", () => {
   it("skips read-only o2m children and grand-children", () => {
     expect(reverseReactiveHint(Author, { books_ro: "reviews:ro", firstName_ro: {} })).toEqual([
       { entity: Author, fields: [], path: [] },
+    ]);
+  });
+
+  it("can do read-only string hint", () => {
+    // expect(reverseHint(Author, "books:ro")).toEqual([{ entity: Book, fields: ["author"], path: ["author"] }]);
+    expect(reverseReactiveHint(Author, "publisher:ro")).toEqual([{ entity: Author, fields: [], path: [] }]);
+  });
+
+  it("can do array of read-only string hints", () => {
+    expect(reverseReactiveHint(Author, ["firstName:ro", "publisher:ro"])).toEqual([
+      { entity: Author, fields: [], path: [] },
+    ]);
+  });
+
+  it("can do hash of read-only hints", () => {
+    // TODO Enforce that `name` must be `name:ro`
+    expect(reverseReactiveHint(Author, { publisher_ro: "name:ro" })).toEqual([
+      { entity: Author, fields: [], path: [] },
+    ]);
+    expect(reverseReactiveHint(BookReview, { book: "author:ro" })).toEqual([
+      { entity: BookReview, fields: ["book"], path: [] },
+    ]);
+  });
+
+  it("supports async properties", () => {
+    expect(reverseReactiveHint(Author, "numberOfBooks2")).toEqual([
+      { entity: Author, fields: [], path: [] },
+      { entity: Book, fields: ["author"], path: ["author"] },
+    ]);
+    // This is kind of a circular rule, so we get two reactions back:
+    expect(reverseReactiveHint(Book, { author: "numberOfBooks2" })).toEqual([
+      // When the book itself changes it author, rerun the rule "for it"
+      { entity: Book, fields: ["author"], path: [] },
+      // Also run the rule for all the author's other books
+      { entity: Book, fields: ["author"], path: ["author", "books"] },
+    ]);
+  });
+
+  it("supports hasOneDerived", () => {
+    // BookReview.publisher is a hasOneDerived
+    expect(reverseReactiveHint(BookReview, { publisher: "name" })).toEqual([
+      { entity: BookReview, fields: [], path: [] },
+      { entity: BookReview, fields: ["book"], path: [] },
+      { entity: Book, fields: ["author"], path: ["reviews"] },
+      { entity: Author, fields: ["publisher"], path: ["books", "reviews"] },
+    ]);
+  });
+
+  it("supports hasOneThrough", () => {
+    // BookReview.author is a hasOneThrough
+    expect(reverseReactiveHint(BookReview, { author: "firstName" })).toEqual([
+      { entity: BookReview, fields: [], path: [] },
+      { entity: BookReview, fields: ["book"], path: [] },
+      { entity: Book, fields: ["author"], path: ["reviews"] },
+    ]);
+  });
+
+  it("supports hasManyThrough", () => {
+    // BookReview.author is a hasManyThrough
+    expect(reverseReactiveHint(Author, { reviews: "rating" })).toEqual([
+      { entity: Author, fields: [], path: [] },
+      { entity: Book, fields: ["author"], path: ["author"] },
+      { entity: BookReview, fields: ["book"], path: ["book", "author"] },
     ]);
   });
 
