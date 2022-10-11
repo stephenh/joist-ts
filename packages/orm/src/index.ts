@@ -36,6 +36,7 @@ export {
 } from "./loadHints";
 export * from "./loadLens";
 export * from "./newTestInstance";
+export * from "./Promise";
 export * from "./QueryBuilder";
 export { Reactable, Reacted, ReactiveHint, reverseReactiveHint } from "./reactiveHints";
 export * from "./relations";

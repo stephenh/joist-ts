@@ -19,7 +19,7 @@ export interface Driver {
     em: EntityManager,
     meta: EntityMetadata<T>,
     untaggedIds: readonly string[],
-  ): Promise<unknown[]>;
+  ): PromiseLike<unknown[]>;
 
   /** Loads a given m2m relation for potentially multiple entities. */
   loadManyToMany<T extends Entity, U extends Entity>(
@@ -35,13 +35,13 @@ export interface Driver {
     collection: ManyToManyCollection<T, U> | ManyToManyLargeCollection<T, U>,
     // encoded tuples of `foo_id=2,bar_id=3`, `bar_id=4,foo_id=5`
     keys: readonly string[],
-  ): Promise<JoinRow[]>;
+  ): PromiseLike<JoinRow[]>;
 
   loadOneToMany<T extends Entity, U extends Entity>(
     em: EntityManager,
     collection: OneToManyCollection<T, U>,
     untaggedIds: readonly string[],
-  ): Promise<unknown[]>;
+  ): PromiseLike<unknown[]>;
 
   findOneToMany<T extends Entity, U extends Entity>(
     em: EntityManager,
@@ -54,19 +54,19 @@ export interface Driver {
     em: EntityManager,
     reference: OneToOneReferenceImpl<T, U>,
     untaggedIds: readonly string[],
-  ): Promise<unknown[]>;
+  ): PromiseLike<unknown[]>;
 
   find<T extends Entity>(
     em: EntityManager,
     type: EntityConstructor<T>,
     queries: readonly FilterAndSettings<T>[],
-  ): Promise<unknown[][]>;
+  ): PromiseLike<unknown[][]>;
 
   transaction<T>(
     em: EntityManager,
     fn: (txn: Knex.Transaction) => Promise<T>,
     isolationLevel?: "serializable",
-  ): Promise<T>;
+  ): PromiseLike<T>;
 
   flushEntities(em: EntityManager, todos: Record<string, Todo>): Promise<void>;
 
