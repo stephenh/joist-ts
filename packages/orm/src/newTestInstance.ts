@@ -423,7 +423,7 @@ type DefinedOr<T> = T | undefined | null;
 type DeepPartialOpts<T extends Entity> = AllowRelationsOrPartials<OptsOf<T>>;
 
 /** What a factory can accept for a given entity. */
-export type FactoryEntityOpt<T extends Entity> = T | IdOf<T> | ActualFactoryOpts<T>;
+export type FactoryEntityOpt<T extends Entity> = T | ActualFactoryOpts<T>;
 
 type AllowRelationsOrPartials<T> = {
   [P in keyof T]?: T[P] extends DefinedOr<infer U>
