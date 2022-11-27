@@ -1,6 +1,6 @@
 import { isPlainObject } from "is-plain-object";
 import { Entity, isEntity } from "./Entity";
-import { ActualFactoryOpts, EntityConstructor, EntityManager, IdOf, isId, OptsOf } from "./EntityManager";
+import { ActualFactoryOpts, EntityConstructor, EntityManager, IdOf, OptsOf } from "./EntityManager";
 import {
   EntityMetadata,
   getMetadata,
@@ -183,9 +183,6 @@ function resolveFactoryOpt<T extends Entity>(
   // const otherFieldName = field.kind === "poly" ? field.components[0].otherFieldName : field.otherFieldName;
   if (isEntity(opt)) {
     return opt;
-  } else if (isId(opt)) {
-    // Try finding the entity in the UoW, otherwise fallback on just setting it as the id (which we support that now)
-    return (em.entities.find((e) => e.idTagged === opt || getTestId(em, e) === opt) as T) || opt;
   } else if (opt && !isPlainObject(opt) && !(opt instanceof MaybeNew)) {
     // If opt isn't a POJO, assume this is a completely-custom factory
     return meta.factory(em, opt);
