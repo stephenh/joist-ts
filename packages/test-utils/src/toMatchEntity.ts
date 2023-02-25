@@ -22,9 +22,14 @@ export function toMatchEntity<T>(actual: Entity, expected: MatchedEntity<T>): Cu
   // subset of the complex keys in an entity to be "dumb data" versions of themselves.
   const clean = Array.isArray(expected) ? [] : {};
 
+  // Wrap the values so our recursive logic will kick in on the root value itself
+  const cleanRef = { value: clean };
+  const actualRef = { value: actual };
+  const expectedRef = { value: expected };
+
   // Because we might assert again `expect(entity).toMatchEntity({ children: [{ name: "p1" }])`, we keep
   // a queue of entities/copies to make, and work through it as we recurse through the expected/actual pair.
-  const queue: [any, any, any][] = [[actual, expected, clean]];
+  const queue: [any, any, any][] = [[actualRef, expectedRef, cleanRef]];
   while (queue.length > 0) {
     const [actual, expected, clean] = queue.pop()!;
 
@@ -87,8 +92,19 @@ export function toMatchEntity<T>(actual: Entity, expected: MatchedEntity<T>): Cu
     }
   }
 
-  // @ts-ignore
-  return matchers.toMatchObject.call(this, clean, expected);
+  function canCallToMatchObject(o: any): boolean {
+    return (typeof o === "object" && o !== null) || Array.isArray(o);
+  }
+
+  // If we're doing essentially a `expect(a1).toMatchEntity(b2)` then the
+  // values might be strings, like `a:1`, which `toMatchObject` can't handle.
+  if (!canCallToMatchObject(cleanRef.value) || !canCallToMatchObject(expectedRef.value)) {
+    // @ts-ignore
+    return matchers.toMatchObject.call(this, cleanRef, expectedRef);
+  } else {
+    // @ts-ignore
+    return matchers.toMatchObject.call(this, cleanRef.value, expectedRef.value);
+  }
 }
 
 function maybeTestId(maybeEntity: any): any {

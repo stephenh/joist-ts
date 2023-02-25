@@ -6,6 +6,13 @@ import { newEntityManager } from "./setupDbTests";
 expect.addSnapshotSerializer(alignedAnsiStyleSerializer as any);
 
 describe("toMatchEntity", () => {
+  it("can match same entity", async () => {
+    const em = newEntityManager();
+    const b1 = newBook(em);
+    await em.flush();
+    expect(b1).toMatchEntity(b1);
+  });
+
   it("can match primitive fields", async () => {
     const em = newEntityManager();
     const p1 = newAuthor(em, { firstName: "Author 1" });
@@ -308,6 +315,7 @@ describe("toMatchEntity", () => {
       -   "a#2",
         ]
     `);
+    expect([] as any).toMatchEntity([{ author1: a1 }]);
     expect(() => expect([] as any).toMatchEntity([{ author1: a1 }])).toThrowErrorMatchingInlineSnapshot(`
       expect(received).toMatchObject(expected)
 
