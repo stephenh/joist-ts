@@ -1,156 +1,124 @@
-import {
-  Changes,
-  cleanStringValue,
-  ConfigApi,
-  EntityMetadata,
-  EntityOrmField,
-  fail,
-  Flavor,
-  isLoaded,
-  Lens,
-  Loaded,
-  LoadHint,
-  loadLens,
-  newChangesProxy,
-  newRequiredRule,
-  OptsOf,
-  OrderBy,
-  PartialOrNull,
-  PersistedAsyncProperty,
-  setField,
-  setOpts,
-  ValueFilter,
-  ValueGraphQLFilter,
-} from "joist-orm";
-import { Context } from "src/context";
-import {
-  newSmallPublisher,
-  Publisher,
-  PublisherFields,
-  PublisherFilter,
-  PublisherGraphQLFilter,
-  PublisherIdsOpts,
-  PublisherOpts,
-  PublisherOrder,
-  SmallPublisher,
-  smallPublisherMeta,
-} from "./entities";
-import type { EntityManager } from "./entities";
+import { Flavor, ConfigApi, EntityMetadata, EntityOrmField, fail, setOpts, PartialOrNull, OptsOf, Changes, newChangesProxy, Lens, loadLens, LoadHint, Loaded, isLoaded, ValueFilter, ValueGraphQLFilter, OrderBy, newRequiredRule, setField, PersistedAsyncProperty, cleanStringValue } from 'joist-orm';
+import { SmallPublisher, Publisher, newSmallPublisher, PublisherFields, PublisherOpts, PublisherIdsOpts, PublisherFilter, PublisherGraphQLFilter, PublisherOrder, smallPublisherMeta } from './entities';
+import type { EntityManager } from './entities';
+import { Context } from 'src/context';
 
-export type SmallPublisherId = Flavor<string, SmallPublisher> & Flavor<string, "Publisher">;
 
-export interface SmallPublisherFields extends PublisherFields {
-  id: { kind: "primitive"; type: number; unique: true; nullable: false };
-  city: { kind: "primitive"; type: string; unique: false; nullable: never };
-  allAuthorNames: { kind: "primitive"; type: string; unique: false; nullable: undefined };
-}
+    export type SmallPublisherId = Flavor<string, SmallPublisher>  & Flavor<string, "Publisher">;
 
-export interface SmallPublisherOpts extends PublisherOpts {
-  city: string;
-}
+    
+    
+    export interface SmallPublisherFields extends PublisherFields {
+      id: { kind: "primitive"; type: number; unique: true; nullable: false };city: { kind: "primitive"; type: string; unique: false; nullable: never };allAuthorNames: { kind: "primitive"; type: string; unique: false; nullable: undefined };
+    }
 
-export interface SmallPublisherIdsOpts extends PublisherIdsOpts {
-}
+    export interface SmallPublisherOpts extends PublisherOpts {
+      city: string;
+    }
 
-export interface SmallPublisherFilter extends PublisherFilter {
-  city?: ValueFilter<string, never>;
-  allAuthorNames?: ValueFilter<string, null>;
-}
+    export interface SmallPublisherIdsOpts extends PublisherIdsOpts {
+      
+    }
 
-export interface SmallPublisherGraphQLFilter extends PublisherGraphQLFilter {
-  city?: ValueGraphQLFilter<string>;
-  allAuthorNames?: ValueGraphQLFilter<string>;
-}
+    export interface SmallPublisherFilter extends PublisherFilter {
+      city?: ValueFilter<string, never>;allAuthorNames?: ValueFilter<string, null>;
+    }
 
-export interface SmallPublisherOrder extends PublisherOrder {
-  city?: OrderBy;
-  allAuthorNames?: OrderBy;
-}
+    export interface SmallPublisherGraphQLFilter extends PublisherGraphQLFilter {
+      city?: ValueGraphQLFilter<string>;allAuthorNames?: ValueGraphQLFilter<string>;
+    }
 
-export const smallPublisherConfig = new ConfigApi<SmallPublisher, Context>();
+    export interface SmallPublisherOrder extends PublisherOrder {
+      city?: OrderBy;allAuthorNames?: OrderBy;
+    }
 
-smallPublisherConfig.addRule(newRequiredRule("city"));
+    export const smallPublisherConfig = new ConfigApi<SmallPublisher, Context>();
 
-export abstract class SmallPublisherCodegen extends Publisher {
-  static defaultValues: object = {};
-  static readonly tagName = "p";
-  static readonly metadata: EntityMetadata<SmallPublisher>;
+    smallPublisherConfig.addRule(newRequiredRule("city"));
+    
+    export abstract class SmallPublisherCodegen extends Publisher {
+      static defaultValues: object = {
+        
+      };
+      static readonly tagName = "p";
+      static readonly metadata: EntityMetadata<SmallPublisher>;
 
-  declare readonly __orm: EntityOrmField & {
-    filterType: SmallPublisherFilter;
-    gqlFilterType: SmallPublisherGraphQLFilter;
-    orderType: SmallPublisherOrder;
-    optsType: SmallPublisherOpts;
-    fieldsType: SmallPublisherFields;
-    optIdsType: SmallPublisherIdsOpts;
-    factoryOptsType: Parameters<typeof newSmallPublisher>[1];
-  };
+      declare readonly __orm: EntityOrmField & {
+        filterType: SmallPublisherFilter;
+        gqlFilterType: SmallPublisherGraphQLFilter;
+        orderType: SmallPublisherOrder;
+        optsType: SmallPublisherOpts;
+        fieldsType: SmallPublisherFields;
+        optIdsType: SmallPublisherIdsOpts;
+        factoryOptsType: Parameters<typeof newSmallPublisher>[1];
+      };
+      
 
-  constructor(em: EntityManager, opts: SmallPublisherOpts) {
-    // @ts-ignore
-    super(em, smallPublisherMeta, SmallPublisherCodegen.defaultValues, opts);
-    setOpts(this as any as SmallPublisher, opts, { calledFromConstructor: true });
-  }
+      
+      constructor(em: EntityManager, opts: SmallPublisherOpts) {
+        // @ts-ignore
+        super(em, smallPublisherMeta, SmallPublisherCodegen.defaultValues, opts);
+        setOpts(this as any as SmallPublisher, opts, { calledFromConstructor: true });
+        
+      }
+    
 
-  get id(): SmallPublisherId | undefined {
-    return this.idTagged;
-  }
+      get id(): SmallPublisherId | undefined {
+        return this.idTagged;
+      }
 
-  get idOrFail(): SmallPublisherId {
-    return this.id || fail("SmallPublisher has no id yet");
-  }
+      get idOrFail(): SmallPublisherId {
+        return this.id || fail("SmallPublisher has no id yet");
+      }
 
-  get idTagged(): SmallPublisherId | undefined {
-    return this.__orm.data["id"];
-  }
+      get idTagged(): SmallPublisherId | undefined {
+        return this.__orm.data["id"];
+      }
 
-  get idTaggedOrFail(): SmallPublisherId {
-    return this.idTagged || fail("SmallPublisher has no id tagged yet");
-  }
+      get idTaggedOrFail(): SmallPublisherId {
+        return this.idTagged || fail("SmallPublisher has no id tagged yet");
+      }
 
-  get city(): string {
-    return this.__orm.data["city"];
-  }
+      
+        get city(): string {
+          return this.__orm.data["city"];
+        }
+      
+        set city(city: string) {
+          setField(this, "city", cleanStringValue(city));
+        }
+      
+        abstract readonly allAuthorNames: PersistedAsyncProperty<SmallPublisher, string | undefined>;
+      
 
-  set city(city: string) {
-    setField(this, "city", cleanStringValue(city));
-  }
+      set(opts: Partial<SmallPublisherOpts>): void {
+        setOpts(this as any as SmallPublisher, opts);
+      }
 
-  abstract readonly allAuthorNames: PersistedAsyncProperty<SmallPublisher, string | undefined>;
+      setPartial(opts: PartialOrNull<SmallPublisherOpts>): void {
+        setOpts(this as any as SmallPublisher, opts as OptsOf<SmallPublisher>, { partial: true });
+      }
 
-  set(opts: Partial<SmallPublisherOpts>): void {
-    setOpts(this as any as SmallPublisher, opts);
-  }
+      get changes(): Changes<SmallPublisher> {
+        return newChangesProxy(this) as any;
+      }
 
-  setPartial(opts: PartialOrNull<SmallPublisherOpts>): void {
-    setOpts(this as any as SmallPublisher, opts as OptsOf<SmallPublisher>, { partial: true });
-  }
+      
 
-  get changes(): Changes<SmallPublisher> {
-    return newChangesProxy(this) as any;
-  }
+      load<U, V>(fn: (lens: Lens<SmallPublisher>) => Lens<U, V>, opts: { sql?: boolean } = {}): Promise<V> {
+        return loadLens(this as any as SmallPublisher, fn, opts);
+      }
 
-  load<U, V>(fn: (lens: Lens<SmallPublisher>) => Lens<U, V>, opts: { sql?: boolean } = {}): Promise<V> {
-    return loadLens(this as any as SmallPublisher, fn, opts);
-  }
+      populate<const H extends LoadHint<SmallPublisher>>(hint: H): Promise<Loaded<SmallPublisher, H>>;
+      populate<const H extends LoadHint<SmallPublisher>>(opts: { hint: H, forceReload?: boolean }): Promise<Loaded<SmallPublisher, H>>;
+      populate<const H extends LoadHint<SmallPublisher>, V>(hint: H, fn: (p: Loaded<SmallPublisher, H>) => V): Promise<V>;
+      populate<const H extends LoadHint<SmallPublisher>, V>(opts: { hint: H, forceReload?: boolean }, fn: (p: Loaded<SmallPublisher, H>) => V): Promise<V>;
+      populate<H extends LoadHint<SmallPublisher>, V>(hintOrOpts: any, fn?: (p: Loaded<SmallPublisher, H>) => V): Promise<Loaded<SmallPublisher, H> | V> {
+        return this.em.populate(this as any as SmallPublisher, hintOrOpts, fn);
+      }
 
-  populate<H extends LoadHint<SmallPublisher>>(hint: H): Promise<Loaded<SmallPublisher, H>>;
-  populate<H extends LoadHint<SmallPublisher>>(
-    opts: { hint: H; forceReload?: boolean },
-  ): Promise<Loaded<SmallPublisher, H>>;
-  populate<H extends LoadHint<SmallPublisher>, V>(hint: H, fn: (p: Loaded<SmallPublisher, H>) => V): Promise<V>;
-  populate<H extends LoadHint<SmallPublisher>, V>(
-    opts: { hint: H; forceReload?: boolean },
-    fn: (p: Loaded<SmallPublisher, H>) => V,
-  ): Promise<V>;
-  populate<H extends LoadHint<SmallPublisher>, V>(
-    hintOrOpts: any,
-    fn?: (p: Loaded<SmallPublisher, H>) => V,
-  ): Promise<Loaded<SmallPublisher, H> | V> {
-    return this.em.populate(this as any as SmallPublisher, hintOrOpts, fn);
-  }
-
-  isLoaded<H extends LoadHint<SmallPublisher>>(hint: H): this is Loaded<SmallPublisher | Publisher, H> {
-    return isLoaded(this as any as SmallPublisher, hint);
-  }
-}
+      isLoaded<const H extends LoadHint<SmallPublisher>>(hint: H): this is Loaded<SmallPublisher| Publisher, H> {
+        return isLoaded(this as any as SmallPublisher, hint);
+      }
+    }
+  

@@ -1,144 +1,121 @@
-import {
-  BaseEntity,
-  Changes,
-  cleanStringValue,
-  ConfigApi,
-  EntityMetadata,
-  EntityOrmField,
-  fail,
-  Flavor,
-  isLoaded,
-  Lens,
-  Loaded,
-  LoadHint,
-  loadLens,
-  newChangesProxy,
-  newRequiredRule,
-  OptsOf,
-  OrderBy,
-  PartialOrNull,
-  setField,
-  setOpts,
-  ValueFilter,
-  ValueGraphQLFilter,
-} from "joist-orm";
-import { Context } from "src/context";
-import { DatabaseOwner, databaseOwnerMeta, newDatabaseOwner } from "./entities";
-import type { EntityManager } from "./entities";
+import { Flavor, ConfigApi, EntityMetadata, EntityOrmField, fail, setOpts, PartialOrNull, OptsOf, Changes, newChangesProxy, Lens, loadLens, LoadHint, Loaded, isLoaded, BaseEntity, ValueFilter, ValueGraphQLFilter, OrderBy, newRequiredRule, setField, cleanStringValue } from 'joist-orm';
+import { DatabaseOwner, newDatabaseOwner, databaseOwnerMeta } from './entities';
+import type { EntityManager } from './entities';
+import { Context } from 'src/context';
 
-export type DatabaseOwnerId = Flavor<string, DatabaseOwner>;
 
-export interface DatabaseOwnerFields {
-  id: { kind: "primitive"; type: number; unique: true; nullable: false };
-  name: { kind: "primitive"; type: string; unique: false; nullable: never };
-}
+    export type DatabaseOwnerId = Flavor<string, DatabaseOwner> ;
 
-export interface DatabaseOwnerOpts {
-  name: string;
-}
+    
+    
+    export interface DatabaseOwnerFields  {
+      id: { kind: "primitive"; type: number; unique: true; nullable: false };name: { kind: "primitive"; type: string; unique: false; nullable: never };
+    }
 
-export interface DatabaseOwnerIdsOpts {
-}
+    export interface DatabaseOwnerOpts  {
+      name: string;
+    }
 
-export interface DatabaseOwnerFilter {
-  id?: ValueFilter<DatabaseOwnerId, never>;
-  name?: ValueFilter<string, never>;
-}
+    export interface DatabaseOwnerIdsOpts  {
+      
+    }
 
-export interface DatabaseOwnerGraphQLFilter {
-  id?: ValueGraphQLFilter<DatabaseOwnerId>;
-  name?: ValueGraphQLFilter<string>;
-}
+    export interface DatabaseOwnerFilter  {
+      id?: ValueFilter<DatabaseOwnerId, never>;name?: ValueFilter<string, never>;
+    }
 
-export interface DatabaseOwnerOrder {
-  id?: OrderBy;
-  name?: OrderBy;
-}
+    export interface DatabaseOwnerGraphQLFilter  {
+      id?: ValueGraphQLFilter<DatabaseOwnerId>;name?: ValueGraphQLFilter<string>;
+    }
 
-export const databaseOwnerConfig = new ConfigApi<DatabaseOwner, Context>();
+    export interface DatabaseOwnerOrder  {
+      id?: OrderBy;name?: OrderBy;
+    }
 
-databaseOwnerConfig.addRule(newRequiredRule("name"));
+    export const databaseOwnerConfig = new ConfigApi<DatabaseOwner, Context>();
 
-export abstract class DatabaseOwnerCodegen extends BaseEntity<EntityManager> {
-  static defaultValues: object = {};
-  static readonly tagName = "do";
-  static readonly metadata: EntityMetadata<DatabaseOwner>;
+    databaseOwnerConfig.addRule(newRequiredRule("name"));
+    
+    export abstract class DatabaseOwnerCodegen extends BaseEntity<EntityManager> {
+      static defaultValues: object = {
+        
+      };
+      static readonly tagName = "do";
+      static readonly metadata: EntityMetadata<DatabaseOwner>;
 
-  declare readonly __orm: EntityOrmField & {
-    filterType: DatabaseOwnerFilter;
-    gqlFilterType: DatabaseOwnerGraphQLFilter;
-    orderType: DatabaseOwnerOrder;
-    optsType: DatabaseOwnerOpts;
-    fieldsType: DatabaseOwnerFields;
-    optIdsType: DatabaseOwnerIdsOpts;
-    factoryOptsType: Parameters<typeof newDatabaseOwner>[1];
-  };
+      declare readonly __orm: EntityOrmField & {
+        filterType: DatabaseOwnerFilter;
+        gqlFilterType: DatabaseOwnerGraphQLFilter;
+        orderType: DatabaseOwnerOrder;
+        optsType: DatabaseOwnerOpts;
+        fieldsType: DatabaseOwnerFields;
+        optIdsType: DatabaseOwnerIdsOpts;
+        factoryOptsType: Parameters<typeof newDatabaseOwner>[1];
+      };
+      
 
-  constructor(em: EntityManager, opts: DatabaseOwnerOpts) {
-    super(em, databaseOwnerMeta, DatabaseOwnerCodegen.defaultValues, opts);
-    setOpts(this as any as DatabaseOwner, opts, { calledFromConstructor: true });
-  }
+      
+      constructor(em: EntityManager, opts: DatabaseOwnerOpts) {
+        super(em, databaseOwnerMeta, DatabaseOwnerCodegen.defaultValues, opts);
+        setOpts(this as any as DatabaseOwner, opts, { calledFromConstructor: true });
+        
+      }
+    
 
-  get id(): DatabaseOwnerId | undefined {
-    return this.idTagged;
-  }
+      get id(): DatabaseOwnerId | undefined {
+        return this.idTagged;
+      }
 
-  get idOrFail(): DatabaseOwnerId {
-    return this.id || fail("DatabaseOwner has no id yet");
-  }
+      get idOrFail(): DatabaseOwnerId {
+        return this.id || fail("DatabaseOwner has no id yet");
+      }
 
-  get idTagged(): DatabaseOwnerId | undefined {
-    return this.__orm.data["id"];
-  }
+      get idTagged(): DatabaseOwnerId | undefined {
+        return this.__orm.data["id"];
+      }
 
-  get idTaggedOrFail(): DatabaseOwnerId {
-    return this.idTagged || fail("DatabaseOwner has no id tagged yet");
-  }
+      get idTaggedOrFail(): DatabaseOwnerId {
+        return this.idTagged || fail("DatabaseOwner has no id tagged yet");
+      }
 
-  get name(): string {
-    return this.__orm.data["name"];
-  }
+      
+        get name(): string {
+          return this.__orm.data["name"];
+        }
+      
+        set name(name: string) {
+          setField(this, "name", cleanStringValue(name));
+        }
+      
 
-  set name(name: string) {
-    setField(this, "name", cleanStringValue(name));
-  }
+      set(opts: Partial<DatabaseOwnerOpts>): void {
+        setOpts(this as any as DatabaseOwner, opts);
+      }
 
-  set(opts: Partial<DatabaseOwnerOpts>): void {
-    setOpts(this as any as DatabaseOwner, opts);
-  }
+      setPartial(opts: PartialOrNull<DatabaseOwnerOpts>): void {
+        setOpts(this as any as DatabaseOwner, opts as OptsOf<DatabaseOwner>, { partial: true });
+      }
 
-  setPartial(opts: PartialOrNull<DatabaseOwnerOpts>): void {
-    setOpts(this as any as DatabaseOwner, opts as OptsOf<DatabaseOwner>, { partial: true });
-  }
+      get changes(): Changes<DatabaseOwner> {
+        return newChangesProxy(this) as any;
+      }
 
-  get changes(): Changes<DatabaseOwner> {
-    return newChangesProxy(this) as any;
-  }
+      
 
-  load<U, V>(fn: (lens: Lens<DatabaseOwner>) => Lens<U, V>, opts: { sql?: boolean } = {}): Promise<V> {
-    return loadLens(this as any as DatabaseOwner, fn, opts);
-  }
+      load<U, V>(fn: (lens: Lens<DatabaseOwner>) => Lens<U, V>, opts: { sql?: boolean } = {}): Promise<V> {
+        return loadLens(this as any as DatabaseOwner, fn, opts);
+      }
 
-  populate<H extends LoadHint<DatabaseOwner>>(hint: H): Promise<Loaded<DatabaseOwner, H>>;
-  populate<H extends LoadHint<DatabaseOwner>>(
-    opts: { hint: H; forceReload?: boolean },
-  ): Promise<Loaded<DatabaseOwner, H>>;
-  populate<H extends LoadHint<DatabaseOwner>, V>(
-    hint: H,
-    fn: (databaseOwner: Loaded<DatabaseOwner, H>) => V,
-  ): Promise<V>;
-  populate<H extends LoadHint<DatabaseOwner>, V>(
-    opts: { hint: H; forceReload?: boolean },
-    fn: (databaseOwner: Loaded<DatabaseOwner, H>) => V,
-  ): Promise<V>;
-  populate<H extends LoadHint<DatabaseOwner>, V>(
-    hintOrOpts: any,
-    fn?: (databaseOwner: Loaded<DatabaseOwner, H>) => V,
-  ): Promise<Loaded<DatabaseOwner, H> | V> {
-    return this.em.populate(this as any as DatabaseOwner, hintOrOpts, fn);
-  }
+      populate<const H extends LoadHint<DatabaseOwner>>(hint: H): Promise<Loaded<DatabaseOwner, H>>;
+      populate<const H extends LoadHint<DatabaseOwner>>(opts: { hint: H, forceReload?: boolean }): Promise<Loaded<DatabaseOwner, H>>;
+      populate<const H extends LoadHint<DatabaseOwner>, V>(hint: H, fn: (databaseOwner: Loaded<DatabaseOwner, H>) => V): Promise<V>;
+      populate<const H extends LoadHint<DatabaseOwner>, V>(opts: { hint: H, forceReload?: boolean }, fn: (databaseOwner: Loaded<DatabaseOwner, H>) => V): Promise<V>;
+      populate<H extends LoadHint<DatabaseOwner>, V>(hintOrOpts: any, fn?: (databaseOwner: Loaded<DatabaseOwner, H>) => V): Promise<Loaded<DatabaseOwner, H> | V> {
+        return this.em.populate(this as any as DatabaseOwner, hintOrOpts, fn);
+      }
 
-  isLoaded<H extends LoadHint<DatabaseOwner>>(hint: H): this is Loaded<DatabaseOwner, H> {
-    return isLoaded(this as any as DatabaseOwner, hint);
-  }
-}
+      isLoaded<const H extends LoadHint<DatabaseOwner>>(hint: H): this is Loaded<DatabaseOwner, H> {
+        return isLoaded(this as any as DatabaseOwner, hint);
+      }
+    }
+  
