@@ -57,6 +57,9 @@ import { AbstractRelationImpl } from "./relations/AbstractRelationImpl";
 import { PersistedAsyncPropertyImpl } from "./relations/hasPersistedAsyncProperty";
 import {MaybePromise, assertNever, fail, getOrSet, toArray, groupBy, indexBy} from "./utils";
 
+// polyfill
+(Symbol as any).asyncDispose ??= Symbol("Symbol.asyncDispose");
+
 /**
  * The constructor for concrete entity types.
  *
@@ -1387,6 +1390,10 @@ export class EntityManager<C = unknown> {
       entities = this.#pendingCascadeDeletes;
       this.#pendingCascadeDeletes = [];
     }
+  }
+
+  async [Symbol.asyncDispose](): Promise<void> {
+    await this.flush();
   }
 }
 

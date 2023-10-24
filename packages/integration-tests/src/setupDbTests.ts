@@ -15,7 +15,7 @@ export const makeApiCall = jest.fn();
 export let numberOfQueries = 0;
 export let queries: string[] = [];
 
-export function newEntityManager() {
+export function newEntityManager(): EntityManager {
   const ctx = { knex };
   const em = new EntityManager(ctx as any, driver);
   Object.assign(ctx, { em, makeApiCall });
