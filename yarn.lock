@@ -4665,7 +4665,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/ws@npm:^8.5.5":
+"@types/ws@npm:*, @types/ws@npm:^8.5.5":
   version: 8.5.10
   resolution: "@types/ws@npm:8.5.10"
   dependencies:
@@ -5798,6 +5798,17 @@ __metadata:
   dependencies:
     semver: ^7.0.0
   checksum: 66d204657fe36522822a95b288943ad11b58f5eaede235b11d8c4edaa28ce4800087d44a2681524c340494aadb120a0068011acabe99d30e8f11a7d826d83515
+  languageName: node
+  linkType: hard
+
+"bun-types@npm:^1.0.25":
+  version: 1.0.25
+  resolution: "bun-types@npm:1.0.25"
+  dependencies:
+    "@types/node": "*"
+    "@types/ws": "*"
+    undici-types: ^5.26.4
+  checksum: 21f8314300e8b6634d93b74ccc364165891795b73f9b5bd52e9c67374f35cd420e951379d506f4b7bdc3af4c5a63da71a6f4cdba1bd926ab04cb145f536f8236
   languageName: node
   linkType: hard
 
@@ -11087,6 +11098,7 @@ __metadata:
     "@swc/jest": ^0.2.29
     "@types/jest": ^29.5.11
     "@types/node": ^20.10.5
+    bun-types: ^1.0.25
     env-cmd: ^10.1.0
     jest: 30.0.0-alpha.2
     jest-junit: ^16.0.0
@@ -17897,6 +17909,13 @@ __metadata:
   bin:
     uglifyjs: bin/uglifyjs
   checksum: 5d2f5a8591b84d81317783205ba26c7a94c435476c19df8612024d28986acbe1f5dbd65bc604134a8557a3f64e8a5ed2660d11e2ba74b59af1fe531fd5506b16
+  languageName: node
+  linkType: hard
+
+"undici-types@npm:^5.26.4":
+  version: 5.28.2
+  resolution: "undici-types@npm:5.28.2"
+  checksum: f27b6f216d51e321b823ba5bc8f41e3ebe1e4b9e713f8dd0991e9a70a7bedd5f7aea06dcfb480d712ab358e9d7bdb1b9ee54095f64f7379bdcdee1f87e43d68e
   languageName: node
   linkType: hard
 
