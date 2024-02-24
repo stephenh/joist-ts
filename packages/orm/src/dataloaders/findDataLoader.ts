@@ -19,6 +19,7 @@ import {
 import { visitConditions } from "../QueryVisitor";
 import { kq, kqDot } from "../keywords";
 import { LoadHint } from "../loadHints";
+import { FindCallback } from "../plugins/FindPlugin";
 import { assertNever, cleanSql } from "../utils";
 
 export function findDataLoader<T extends Entity>(
@@ -53,12 +54,19 @@ export function findDataLoader<T extends Entity>(
         // We have to parseFindQuery queries[0], b/c our query variable may be captured from
         // a prior invocation that instantiated our dataloader instance.
         const query = parseFindQuery(meta, where, opts);
+        // Maybe do auth checks
+        const { findPlugin } = getEmInternalApi(em);
+        let findCallback: FindCallback;
+        if (findPlugin) {
+          findCallback = findPlugin.beforeFind(meta, query);
+        }
         // Maybe add preload joins
         const { preloader } = getEmInternalApi(em);
         const preloadHydrator = preloader && hint && preloader.addPreloading(em, meta, buildHintTree(hint), query);
         const rows = await em.driver.executeFind(em, query, opts);
         ensureUnderLimit(em, rows);
         const entities = em.hydrate(type, rows, { overwriteExisting: false });
+        findCallback?.(entities);
         preloadHydrator?.(rows, entities);
         return [entities];
       }
@@ -70,6 +78,7 @@ export function findDataLoader<T extends Entity>(
       // )
       // SELECT array_agg(d.tag), a.*
       // FROM authors a
+      // <...maybe auth/etc. filters...>
       // JOIN data d ON (d.arg1 = a.first_name OR d.arg2 = a.last_name)
       // group by a.id;
 
@@ -109,6 +118,18 @@ export function findDataLoader<T extends Entity>(
         );
       }
 
+      // look for a filter api. give it this query? ask it to give back filters?
+      // what do we need to know?
+      // what joins and conditions to add to this query.
+      // should we ask for additions? or pass the query?
+      // eventually we should support being escape hatched for method invocations
+
+      const { findPlugin } = getEmInternalApi(em);
+      let findCallback: FindCallback;
+      if (findPlugin) {
+        findCallback = findPlugin.beforeFind(meta, query);
+      }
+
       const sql = `
         ${buildValuesCte("_find", args, queries)}
         SELECT ${selects.join(", ")}
@@ -126,6 +147,8 @@ export function findDataLoader<T extends Entity>(
 
       const entities = em.hydrate(type, rows, { overwriteExisting: false });
       preloadJoins?.forEach((j) => j.hydrator(rows, entities));
+
+      findCallback?.(entities);
 
       // Make an empty array for each batched query, per the dataloader contract
       const results = queries.map(() => [] as T[]);

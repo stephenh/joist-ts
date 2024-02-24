@@ -11,16 +11,26 @@ import { ensureNotDeleted, maybeResolveReferenceToId } from "./index";
  * We skip any typing like `fieldName: keyof T` because this method should only be
  * called by trusted codegen anyway.
  */
-export function getField(entity: Entity, fieldName: string): any {
+export function getField(
+  entity: Entity,
+  fieldName: string,
+  internalCall: boolean = false,
+  /** If true, return the AbstractRelationImpl wrapper instead of the raw db value. */
+  maybeRelation: boolean = false,
+): any {
   // We may not have converted the database column value into domain values yet
   const { data, row } = getOrmField(entity);
-  if (fieldName in data) {
-    return data[fieldName];
-  } else {
-    const serde = getMetadata(entity).allFields[fieldName].serde ?? fail(`Missing serde for ${fieldName}`);
-    serde.setOnEntity(data, row);
-    return data[fieldName];
+  const { findPlugin } = getEmInternalApi(entity.em);
+  if (!(fieldName in data)) {
+    // We may not have a serde if this is a collection like `Author.books`, and the caller just wants our ManyToOneReference
+    const serde = getMetadata(entity).allFields[fieldName].serde;
+    if (serde) {
+      serde.setOnEntity(data, row);
+    }
   }
+  !internalCall && findPlugin?.beforeGetField?.(entity, fieldName);
+  if (maybeRelation) return (entity as any)[fieldName];
+  return data[fieldName];
 }
 
 /** Returns whether `fieldName` is a field/column on `entity` that can be changed. */
@@ -40,6 +50,14 @@ export function isFieldSet(entity: Entity, fieldName: string): boolean {
 }
 
 /**
+ * Returns whether `newValue` is different from the current value of `fieldName`.
+ */
+export function isChangedValue(entity: Entity, fieldName: string, newValue: any): boolean {
+  const currentValue = getField(entity, fieldName);
+  return !equalOrSameEntity(currentValue, newValue);
+}
+
+/**
  * Sets the current value of `fieldName`, this is an internal method that should
  * only be called by the code-generated setters.
  *
@@ -53,6 +71,9 @@ export function setField(entity: Entity, fieldName: string, newValue: any): bool
   const { em } = entity;
 
   getEmInternalApi(em).checkWritesAllowed();
+
+  const { findPlugin } = getEmInternalApi(em);
+  findPlugin?.beforeSetField?.(entity, fieldName, newValue);
 
   const { data, originalData } = getOrmField(entity);
 

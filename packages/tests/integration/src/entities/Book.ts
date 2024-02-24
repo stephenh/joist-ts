@@ -1,3 +1,4 @@
+import { AsyncMethod, hasAsyncMethod } from "joist-orm";
 import { Author, BookCodegen, bookConfig as config } from "./entities";
 
 export class Book extends BookCodegen {
@@ -7,6 +8,8 @@ export class Book extends BookCodegen {
   reviewsRuleInvoked = 0;
   numberOfBooks2RuleInvoked = 0;
   authorSetWhenDeleteRuns: boolean | undefined = undefined;
+
+  readonly publish: AsyncMethod<Book, [], void> = hasAsyncMethod({}, () => {});
 }
 
 config.addRule((book) => {

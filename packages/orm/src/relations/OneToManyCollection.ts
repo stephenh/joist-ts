@@ -68,6 +68,8 @@ export class OneToManyCollection<T extends Entity, U extends Entity>
   async load(opts: { withDeleted?: boolean; forceReload?: boolean } = {}): Promise<readonly U[]> {
     ensureNotDeleted(this.entity, "pending");
     if (this.loaded === undefined || (opts.forceReload && !this.entity.isNewEntity)) {
+      const { findPlugin } = getEmInternalApi(this.entity.em);
+      findPlugin?.beforeLoad?.(this.meta, this.entity, this);
       // If forceReload=true, the `.load` might return a cached array, which one would think is stale
       // (i.e. it doesn't have our WIP adds & removes applied to it), _but_ because we've been mutating
       // our `this.loaded`, really `.load` is a noop, and just gives us back the same list we had before.
@@ -81,6 +83,8 @@ export class OneToManyCollection<T extends Entity, U extends Entity>
       const dl = oneToManyDataLoader(this.entity.em, this);
       this.loaded = this.getPreloaded() ?? (await dl.load(this.entity.idTagged!));
       this.maybeAppendAddedBeforeLoaded();
+
+      findPlugin?.afterLoad?.(this.meta, this.entity, this);
     }
     return this.filterDeleted(this.loaded, opts);
   }
@@ -287,7 +291,7 @@ export class OneToManyCollection<T extends Entity, U extends Entity>
   }
 
   public toString(): string {
-    return `OneToManyCollection(entity: ${this.entity}, fieldName: ${this.fieldName}, otherType: ${this.otherMeta.type}, otherFieldName: ${this.otherFieldName})`;
+    return `${this.entity}.${this.fieldName}`;
   }
 
   /** Removes pending-hard-delete or soft-deleted entities, unless explicitly asked for. */

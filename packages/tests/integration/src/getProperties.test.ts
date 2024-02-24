@@ -1,7 +1,9 @@
 import { authorMeta, bookMeta, bookReviewMeta, imageMeta, publisherMeta } from "@src/entities";
 import {
+  AsyncMethodImpl,
   CustomCollection,
   CustomReference,
+  FieldProperty,
   ManyToManyCollection,
   ManyToOneReferenceImpl,
   OneToManyCollection,
@@ -12,21 +14,59 @@ import {
 
 describe("getProperties", () => {
   it("should work", () => {
+    expect(Object.keys(getProperties(bookMeta)).sort()).toEqual([
+      "advances",
+      "author",
+      "authorSetWhenDeleteRuns",
+      "comments",
+      "createdAt",
+      "currentDraftAuthor",
+      "deletedAt",
+      "favoriteColorsRuleInvoked",
+      "firstNameRuleInvoked",
+      "id",
+      "image",
+      "notes",
+      "numberOfBooks2RuleInvoked",
+      "order",
+      "publish",
+      "reviews",
+      "reviewsRuleInvoked",
+      "rulesInvoked",
+      "tags",
+      "title",
+      "updatedAt",
+    ]);
+
     expect(getProperties(bookMeta)).toEqual({
       advances: expect.any(OneToManyCollection),
-      reviews: expect.any(OneToManyCollection),
-      comments: expect.any(OneToManyCollection),
       author: expect.any(ManyToOneReferenceImpl),
       authorSetWhenDeleteRuns: expect.any(UnknownProperty),
+      comments: expect.any(OneToManyCollection),
+      createdAt: expect.any(FieldProperty),
       currentDraftAuthor: expect.any(OneToOneReferenceImpl),
-      image: expect.any(OneToOneReferenceImpl),
-      tags: expect.any(ManyToManyCollection),
+      deletedAt: expect.any(FieldProperty),
       favoriteColorsRuleInvoked: 0,
       firstNameRuleInvoked: 0,
+      id: expect.any(FieldProperty),
+      image: expect.any(OneToOneReferenceImpl),
+      notes: expect.any(FieldProperty),
+      numberOfBooks2RuleInvoked: 0,
+      order: expect.any(FieldProperty),
+      publish: expect.any(AsyncMethodImpl),
+      reviews: expect.any(OneToManyCollection),
       reviewsRuleInvoked: 0,
       rulesInvoked: 0,
-      numberOfBooks2RuleInvoked: 0,
+      tags: expect.any(ManyToManyCollection),
+      title: expect.any(FieldProperty),
+      updatedAt: expect.any(FieldProperty),
     });
+  });
+
+  it("does not include getters", () => {
+    const p = getProperties(authorMeta);
+    expect(p["fullName"]).toEqual("undefined");
+    expect(p["firstName"]).toBeInstanceOf(FieldProperty);
   });
 
   it("works for custom references", () => {

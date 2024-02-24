@@ -55,6 +55,7 @@ import {
   toTaggedId,
 } from "./index";
 import { LoadHint, Loaded, NestedLoadHint, New, RelationsIn } from "./loadHints";
+import { FindPlugin } from "./plugins/FindPlugin";
 import { PreloadPlugin } from "./plugins/PreloadPlugin";
 import { followReverseHint } from "./reactiveHints";
 import { ManyToOneReferenceImpl, OneToOneReferenceImpl, PersistedAsyncReferenceImpl } from "./relations";
@@ -166,6 +167,7 @@ export interface TimestampFields {
 export interface EntityManagerOpts {
   driver: Driver;
   preloadPlugin?: PreloadPlugin;
+  findPlugin?: FindPlugin;
 }
 
 export interface FlushOptions {
@@ -219,6 +221,7 @@ export class EntityManager<C = unknown, Entity extends EntityW = EntityW> {
   readonly #fl = new FlushLock();
   readonly #hooks: Record<EntityManagerHook, HookFn[]> = { beforeTransaction: [], afterTransaction: [] };
   readonly #preloader: PreloadPlugin | undefined;
+  readonly #findPlugin: FindPlugin | undefined;
   private __api: EntityManagerInternalApi;
 
   constructor(em: EntityManager<C>);
@@ -229,6 +232,7 @@ export class EntityManager<C = unknown, Entity extends EntityW = EntityW> {
       const em = emOrCtx;
       this.driver = em.driver;
       this.#preloader = em.#preloader;
+      this.#findPlugin = em.#findPlugin;
       this.#hooks = {
         beforeTransaction: [...em.#hooks.beforeTransaction],
         afterTransaction: [...em.#hooks.afterTransaction],
@@ -238,16 +242,19 @@ export class EntityManager<C = unknown, Entity extends EntityW = EntityW> {
       this.ctx = emOrCtx;
       this.driver = driverOrOpts;
       this.#preloader = undefined;
+      this.#findPlugin = undefined;
     } else {
       this.ctx = emOrCtx;
       this.driver = driverOrOpts!.driver;
       this.#preloader = driverOrOpts!.preloadPlugin;
+      this.#findPlugin = driverOrOpts!.findPlugin;
     }
 
     // Expose some of our private fields as the EntityManagerInternalApi
     const em = this;
     this.__api = {
       preloader: this.#preloader,
+      findPlugin: this.#findPlugin,
       joinRows(m2m: ManyToManyCollection<any, any>): JoinRows {
         return getOrSet(em.#joinRows, m2m.joinTableName, () => new JoinRows(m2m, em.#rm));
       },
@@ -679,7 +686,7 @@ export class EntityManager<C = unknown, Entity extends EntityW = EntityW> {
     // Keep a list that we can work against synchronously after doing the async find/crawl
     const todo: Entity[] = [];
 
-    // 1. Find all entities w/o mutating them yets
+    // 1. Find all entities w/o mutating them yet
     await crawl(todo, Array.isArray(entityOrArray) ? entityOrArray : [entityOrArray], deep, { skipIf: skipIf as any });
 
     // 2. Clone each found entity
@@ -1012,7 +1019,7 @@ export class EntityManager<C = unknown, Entity extends EntityW = EntityW> {
     );
   }
 
-  /** Registers a newly-instantiated entity with our EntityManager; only called by entity constructors. */
+  /** Registers a newly-instantiated entity with our EntityManager; only called by entity constructors of new entities. */
   register(entity: Entity): void {
     if (entity.idTaggedMaybe) {
       if (this.findExistingInstance(entity.idTagged) !== undefined) {
@@ -1447,7 +1454,7 @@ export class EntityManager<C = unknown, Entity extends EntityW = EntityW> {
   private async cascadeDeletes(): Promise<void> {
     let entities = this.#pendingCascadeDeletes;
     this.#pendingCascadeDeletes = [];
-    const relationsToCleanup: AbstractRelationImpl<unknown, unknown>[] = [];
+    const relationsToCleanup: AbstractRelationImpl<any, any>[] = [];
     // Loop if our deletes cascade to other deletes
     while (entities.length > 0) {
       // For cascade delete relations, cascade the delete...
@@ -1474,13 +1481,14 @@ export interface EntityManagerInternalApi {
   /** Map of taggedId -> fieldName -> pending children. */
   pendingChildren: Map<string, Map<string, { adds: Entity[]; removes: Entity[] }>>;
 
-  /** Map of taggedId -> fieldName -> join-loaded data. */
+  /** Map of taggedId -> fieldName -> join-preloaded data. */
   getPreloadedRelation<U>(taggedId: string, fieldName: string): U[] | undefined;
   setPreloadedRelation<U>(taggedId: string, fieldName: string, children: U[]): void;
 
   hooks: Record<EntityManagerHook, HookFn[]>;
   rm: ReactionsManager;
   preloader: PreloadPlugin | undefined;
+  findPlugin: FindPlugin | undefined;
   isValidating: boolean;
   checkWritesAllowed: () => void;
 }

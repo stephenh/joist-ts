@@ -1,9 +1,17 @@
 import { getOrmField } from "./BaseEntity";
 import { Entity, EntityOrmField } from "./Entity";
-import { EntityConstructor, EntityManager, MaybeAbstractEntityConstructor, OptsOf, TaggedId } from "./EntityManager";
+import {
+  EntityConstructor,
+  EntityManager,
+  MaybeAbstractEntityConstructor,
+  OptsOf,
+  TaggedId,
+  getEmInternalApi,
+} from "./EntityManager";
 import { EntityMetadata, getBaseAndSelfMetas, getBaseMeta, getMetadata } from "./EntityMetadata";
 import { setBooted } from "./config";
 import { setSyncDefaults } from "./defaults";
+import { getField } from "./fields";
 import { getFakeInstance, getProperties } from "./getProperties";
 import { maybeResolveReferenceToId, tagFromId } from "./keys";
 import { isAllSqlPaths } from "./loadLens";
@@ -38,6 +46,7 @@ export * from "./getProperties";
 export * from "./keys";
 export { kq, kqDot, kqStar } from "./keywords";
 export {
+  AsyncMethodsIn,
   DeepNew,
   LoadHint,
   Loadable,
@@ -55,9 +64,11 @@ export {
 export * from "./loadLens";
 export * from "./newTestInstance";
 export { deepNormalizeHint, normalizeHint } from "./normalizeHints";
+export { FindCallback, FindPlugin } from "./plugins/FindPlugin";
 export { JoinResult, PreloadHydrator, PreloadPlugin } from "./plugins/PreloadPlugin";
 export { Reactable, Reacted, ReactiveHint, reverseReactiveHint } from "./reactiveHints";
 export * from "./relations";
+export * from "./relations/hasAsyncMethod";
 export {
   GenericError,
   ValidationError,
@@ -126,7 +137,7 @@ export function setOpts<T extends Entity>(
       }
       // We let optional opts fields be `| null` for convenience, and convert to undefined.
       const value = _value === null ? undefined : _value;
-      const current = (entity as any)[key];
+      const current = getField(entity as any, key, true, true);
       if (current instanceof AbstractRelationImpl) {
         if (calledFromConstructor) {
           current.setFromOpts(value);
@@ -196,11 +207,15 @@ export function setOpts<T extends Entity>(
     });
   }
 
-  // Apply any synchronous defaults, after the opts have been applied
-  if (calledFromConstructor && !(entity.em as any).fakeInstance) {
-    // If calledFromConstructor=true, this must be a new entity because we've got
-    // an early-return up above that checks for `em.hydrate` passing in ids
-    setSyncDefaults(entity);
+  if (calledFromConstructor) {
+    // Apply any synchronous defaults, after the opts have been applied
+    if (!(entity.em as any).fakeInstance) {
+      setSyncDefaults(entity);
+    }
+
+    // See if the user is allowed to create this entity
+    const { findPlugin } = getEmInternalApi(entity.em);
+    // findPlugin?.beforeCreate(entity);
   }
 }
 
@@ -301,9 +316,7 @@ export function configureMetadata(metas: EntityMetadata[]): void {
     Object.values(meta.fields)
       .filter((f) => f.kind === "primitive" || (f.kind === "m2o" && f.derived === "async"))
       .forEach((field) => {
-        const ap = (getFakeInstance(meta) as any)[field.fieldName] as
-          | ReactiveFieldImpl<any, any, any>
-          | undefined;
+        const ap = (getFakeInstance(meta) as any)[field.fieldName] as ReactiveFieldImpl<any, any, any> | undefined;
         // We might have an async property configured in joist-config.json that has not yet
         // been made a `hasReactiveField` in the entity file, so avoid continuing
         // if we don't actually have a property/loadHint available.
@@ -318,6 +331,7 @@ export function configureMetadata(metas: EntityMetadata[]): void {
           reversals.forEach(({ entity, path, fields }) => {
             getMetadata(entity).config.__data.reactiveDerivedValues.push({
               cstr: meta.cstr,
+              // I wanted to make this `Entity.fieldName`, but turns out it's used for something
               name: field.fieldName,
               path,
               fields,
