@@ -2,8 +2,10 @@ import { alignedAnsiStyleSerializer } from "@src/alignedAnsiStyleSerializer";
 import { Author, Book, newAuthor, newBook } from "@src/entities";
 import { newEntityManager } from "@src/testEm";
 import { getOrmField, jan1 } from "joist-orm";
+import { preventEqualsOnEntities } from "joist-test-utils";
 
 expect.addSnapshotSerializer(alignedAnsiStyleSerializer as any);
+(expect as any).addEqualityTesters([preventEqualsOnEntities]);
 
 describe("toMatchEntity", () => {
   it("can match primitive fields", async () => {
@@ -397,5 +399,13 @@ describe("toMatchEntity", () => {
       - ]
       + Array []
     `);
+  });
+
+  it("breaks toEqual being called with entities", async () => {
+    const em = newEntityManager();
+    const p1 = newAuthor(em, { firstName: "Author 1" });
+    expect(() => {
+      expect(p1).toEqual(p1);
+    }).toThrow("Use toMatchEntity for comparing entities");
   });
 });

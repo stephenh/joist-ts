@@ -1,5 +1,6 @@
 import { MatchedEntity } from "./toMatchEntity";
 export { Context } from "./context";
+export { preventEqualsOnEntities } from "./preventEqualsOnEntities";
 export { ContextFn, makeRun, makeRunEach, newContext, run, runEach } from "./run";
 export { toMatchEntity } from "./toMatchEntity";
 
