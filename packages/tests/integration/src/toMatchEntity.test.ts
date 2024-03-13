@@ -5,7 +5,6 @@ import { getOrmField, jan1 } from "joist-orm";
 import { preventEqualsOnEntities } from "joist-test-utils";
 
 expect.addSnapshotSerializer(alignedAnsiStyleSerializer as any);
-(expect as any).addEqualityTesters([preventEqualsOnEntities]);
 
 describe("toMatchEntity", () => {
   it("can match primitive fields", async () => {
