@@ -2,7 +2,6 @@ import { alignedAnsiStyleSerializer } from "@src/alignedAnsiStyleSerializer";
 import { Author, Book, newAuthor, newBook } from "@src/entities";
 import { newEntityManager } from "@src/testEm";
 import { getOrmField, jan1 } from "joist-orm";
-import { preventEqualsOnEntities } from "joist-test-utils";
 
 expect.addSnapshotSerializer(alignedAnsiStyleSerializer as any);
 
@@ -26,6 +25,7 @@ describe("toMatchEntity", () => {
     const b1 = newBook(em);
     await em.flush();
     expect(b1).toMatchEntity(b1);
+    expect(b1).toBeEntity(b1);
   });
 
   it("can match entity that is undefined", async () => {
@@ -351,6 +351,7 @@ describe("toMatchEntity", () => {
     const res = [{ author1: a1 }];
     expect(res).toMatchEntity([{ author1: a1 }]);
     expect([a1, a2]).toMatchEntity([a1, a2]);
+    expect([a1, a2]).toBeEntities([a1, a2]);
     expect(() => expect([a1, a2]).toMatchEntity([a2, a1])).toThrowErrorMatchingInlineSnapshot(`
       expect(received).toMatchObject(expected)
 
@@ -405,6 +406,6 @@ describe("toMatchEntity", () => {
     const p1 = newAuthor(em, { firstName: "Author 1" });
     expect(() => {
       expect(p1).toEqual(p1);
-    }).toThrow("Use toMatchEntity for comparing entities");
+    }).toThrow("Use toBeEntity, toBeEntities, or toMatchEntity for asserting against entities");
   });
 });
